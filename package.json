@@ -5,9 +5,10 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
+    "generate": "cd ./Database && npx prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:dev": "nodemon server.js",
-    "start:prod": "NODE_ENV=production nodemon server.js"
+    "start:prod": "npm run generate && NODE_ENV=production nodemon server.js"
   },
   "author": "",
   "license": "ISC",
