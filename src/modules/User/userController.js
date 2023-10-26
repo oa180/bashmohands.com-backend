@@ -345,6 +345,16 @@ export const filterHandler = async (req, res, next) => {
   let usersPool = [];
 
   const [{ sorting }, { topics }, { country }, { gender }] = req.body.filters;
+  console.log(
+    '🚀 ~ file: userController.js:348 ~ filterHandler ~ gender:',
+    req.body.filters
+  );
+  // const [{ sorting }, { topics }, { country }, { gender }] = [
+  //   { sorting: [] },
+  //   { topics: [] },
+  //   { country: [] },
+  //   { gender: [''] },
+  // ];
 
   if (
     sorting.length == 0 &&
@@ -402,56 +412,67 @@ export const filterHandler = async (req, res, next) => {
 
   if (country.length > 0) {
     let countryResult;
-    for (const coun of country) {
+    if (filterResult.size > 0) {
+      countryResult = await prisma.user.findMany({
+        where: {
+          AND: [{ id: { in: filterResult } }, { country: { in: country } }],
+        },
+        select: { id: true },
+      });
+      filterResult.clear();
+    } else {
+      if (userList.length > 0) {
+        countryResult = await prisma.user.findMany({
+          where: {
+            AND: [{ id: { in: userList } }, { country: { in: country } }],
+          },
+          select: { id: true },
+        });
+      } else {
+        countryResult = await prisma.user.findMany({
+          where: { country: { in: country } },
+          select: { id: true },
+        });
+      }
+    }
+    for (const counResult of countryResult) {
+      filterResult.add(counResult.id);
+    }
+  }
+  console.log(
+    '🚀 ~ file: userController.js:502 ~ filterHandler countryResult:',
+    filterResult
+  );
+
+  if (gender.length > 0) {
+    let genderResult;
+    if (!gender.includes('')) {
       if (filterResult.size > 0) {
-        for (const filterItem of [...filterResult]) {
-          countryResult = await prisma.user.findMany({
-            where: { AND: [{ id: filterItem }, { country: coun }] },
-            select: { id: true },
-          });
-        }
+        genderResult = await prisma.user.findMany({
+          where: {
+            AND: [
+              { id: { in: [...filterResult] } },
+              { gender: { in: gender } },
+            ],
+          },
+          select: { id: true },
+        });
+        console.log(
+          '🚀 ~ file: userController.js:466 ~ filterHandler ~ genderResult:',
+          genderResult
+        );
         filterResult.clear();
       } else {
         if (userList.length > 0) {
-          countryResult = await prisma.user.findMany({
+          genderResult = await prisma.user.findMany({
             where: {
-              AND: [{ id: { in: userList } }, { country: coun }],
+              AND: [{ id: { in: userList } }, { gender: { in: gender } }],
             },
             select: { id: true },
           });
         } else {
-          countryResult = await prisma.user.findMany({
-            where: { country: coun },
-            select: { id: true },
-          });
-        }
-      }
-      for (const counResult of countryResult) {
-        filterResult.add(counResult.id);
-      }
-    }
-  }
-
-  if (gender.length > 0) {
-    let genderResult;
-    for (const gen of gender) {
-      if (filterResult.size > 0) {
-        for (const filterItem of [...filterResult]) {
           genderResult = await prisma.user.findMany({
-            where: { AND: [{ id: filterItem }, { gender: gen }] },
-            select: { id: true },
-          });
-        }
-        filterResult.clear();
-      } else {
-        if (userList.length > 0) {
-          genderResult = await prisma.user.findMany({
-            where: { AND: [{ id: { in: userList } }, { gender: gen }] },
-            select: { id: true },
-          });
-        } else {
-          genderResult = await prisma.user.findMany({
-            where: { gender: gen },
+            where: { gender: { in: gender } },
             select: { id: true },
           });
         }
@@ -461,6 +482,11 @@ export const filterHandler = async (req, res, next) => {
       }
     }
   }
+  console.log(
+    '🚀 ~ file: userController.js:502 ~ filterHandler  genderResult:',
+    filterResult
+  );
+
   if (sorting.length > 0) {
     for (const sortValue of sorting) {
       if (sortValue == 'lowest hourly rate') {
@@ -514,7 +540,7 @@ export const filterHandler = async (req, res, next) => {
     }
   }
   console.log(
-    '🚀 ~ file: userController.js:502 ~ filterHandler  filterResult:',
+    '🚀 ~ file: userController.js:502 ~ filterHandler  sortResult:',
     filterResult
   );
 
