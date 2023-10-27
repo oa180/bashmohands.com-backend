@@ -50,6 +50,10 @@ export const registerNewUser = catchAsync(async (req, res, next) => {
   //   Hash password
   const hashedPassword = await argon.hash(password);
 
+  const tempPhoto =
+    gender == 'male'
+      ? 'https://png.pngtree.com/png-clipart/20200224/original/pngtree-cartoon-color-simple-male-avatar-png-image_5230557.jpg'
+      : 'https://png.pngtree.com/png-clipart/20190904/original/pngtree-circular-pattern-user-cartoon-avatar-png-image_4492893.jpg';
   // create New User
   const newUser = await prisma.user.create({
     data: {
@@ -59,6 +63,8 @@ export const registerNewUser = catchAsync(async (req, res, next) => {
       handler,
       password: hashedPassword,
       gender,
+      photo:
+        'https://png.pngtree.com/png-clipart/20210915/ourlarge/pngtree-user-avatar-login-interface-abstract-blue-icon-png-image_3917504.jpg',
     },
   });
 
