@@ -1,5 +1,16 @@
 import AppError from './appError.js';
 
+const handleDuplicateErrorDB = (err, req, res) => {
+  let errorMessage = `There is users with this `;
+
+  err.meta['target'].forEach(item => (errorMessage += `${item}`));
+
+  return res.status(err.statusCode).json({
+    status: err.status,
+    message: errorMessage,
+  });
+};
+
 const handleCastErrorDB = err => {
   const message = `Invalid ${err.path}: ${err.value}.`;
   return new AppError(message, 400);
@@ -90,7 +101,9 @@ const errorController = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, req, res);
+    if (err.name === 'PrismaClientKnownRequestError' && err.code === 'P2002') {
+      handleDuplicateErrorDB(err, req, res);
+    } else sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
     error.message = err.message;

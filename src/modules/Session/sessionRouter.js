@@ -2,7 +2,11 @@
 
 import express from 'express';
 
-import { bookSession } from './sessionController.js';
+import {
+  bookSession,
+  getUserSessions,
+  getSessionById,
+} from './sessionController.js';
 
 import {
   authenticate,
@@ -12,5 +16,7 @@ import {
 const router = express.Router();
 
 router.post('/book', bookSession);
+router.get('/:handler', getUserSessions);
+router.get('/:sid/info', authenticate, getSessionById);
 
 export default router;
