@@ -11,6 +11,7 @@ import prisma from '../../../Database/prisma/prismaClient.js';
 import argon from 'argon2';
 import { createToken } from '../../../middlewares/auth/Authentication.js';
 import { getTopicByName } from '../Topics/topicController.js';
+import { ApiFeatures } from '../../../middlewares/utils/api-featuresjs.js';
 
 /**
  * @desc    Upload Photo Middleware
@@ -188,13 +189,29 @@ export const updateUser = catchAsync(async (req, res, next) => {
  * @access   Public
  */
 export const getAllUsers = catchAsync(async (req, res, next) => {
-  const allUsers = await prisma.user.findMany({
-    include: { topics: true },
-  });
+  const features = new ApiFeatures(
+    prisma.user.findMany({
+      where: {
+        role: { not: 'ADMIN' },
+      },
+      include: { topics: true },
+    }),
+    req.query
+  ).paginate();
+
+  const allUsers = (await features).prismaQuery;
+
+  // const allUsers = await prisma.user.findMany({
+  //   where: {
+  //     role: { not: 'ADMIN' },
+  //   },
+  //   include: { topics: true },
+  // });
 
   Response(res, 'All Users', 200, allUsers);
 });
 
+// ==================================
 /**
  * @desc    Get An User
  * @route   GET /api/user/:userName
