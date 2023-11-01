@@ -69,8 +69,6 @@ export const authenticate = catchAsync(async (req, res, next) => {
 export const isMine = catchAsync(async (req, res, next) => {
   if (req.user.role === 'ADMIN') return next();
   else if (req.params.userName == req.user.handler) {
-    console.log(req.params.userName, req.user.handler);
-
     return next();
   } else
     return next(
