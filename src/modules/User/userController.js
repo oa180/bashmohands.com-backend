@@ -122,47 +122,13 @@ export const viewProfile = catchAsync(async (req, res, next) => {
   let userTarget = await prisma.user.findUnique({
     where: { handler: userName },
     include: { topics: true },
-    select: {},
   });
   if (!userTarget)
     return next(new AppError('No user found with that userName!', 400));
-  if (userTarget.isInstructor) {
-    userTarget = {
-      id: userTarget.id,
-      firstName: userTarget.firstName,
-      lastName: userTarget.lastName,
-      jobTitle: userTarget.jobTitle,
-      bio: userTarget.bio,
-      topics: userTarget.topics,
-      photo: userTarget.photo,
-      coverImage: userTarget.coverImage,
-      hourlyRate: userTarget.hourlyRate,
-      rating: userTarget.rating,
-      country: userTarget.country,
-      // handler: userTarget.handler,
-      // email: userTarget.email,
-      // phone: userTarget.phone,
-      // NID_Verified: userTarget.NID_Verified,
-    };
-  } else {
-    userTarget = {
-      id: userTarget.id,
-      firstName: userTarget.firstName,
-      lastName: userTarget.lastName,
-      // jobTitle: userTarget.jobTitle,
-      bio: userTarget.bio,
-      topics: userTarget.topics,
-      photo: userTarget.photo,
-      coverImage: userTarget.coverImage,
-      country: userTarget.country,
-      // handler: userTarget.handler,
-      // email: userTarget.email,
-      // phone: userTarget.phone,
-      // NID_Verified: userTarget.NID_Verified,
-    };
-  }
+
   Response(res, 'User Info.', 200, userTarget);
 });
+
 export const getAvailableInstructors = catchAsync(async (req, res, next) => {
   const availableInstructors = await prisma.user.findMany({
     where: {
