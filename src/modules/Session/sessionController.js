@@ -210,7 +210,7 @@ export const penddingSessions = catchAsync(async (req, res, next) => {
       instructorHandler: true,
       notes: true,
       status: true,
-      topics: true,
+      // topics: true,
     },
   });
 
