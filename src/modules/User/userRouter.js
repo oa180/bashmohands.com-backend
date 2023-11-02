@@ -54,8 +54,8 @@ router.patch(
   updataUserImages
 );
 
-router.get('/search', authenticate, searchUser);
-router.post('/filter', authenticate, filterHandler);
+router.get('/search', searchUser);
+router.post('/filter', filterHandler);
 router.get('/:uid', getUserById);
 router.get('/:userName/delete', authenticate, isAuthorized, deleteUser);
 export default router;

@@ -30,6 +30,10 @@ export const authenticate = catchAsync(async (req, res, next) => {
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    // console.log(
+    //   '🚀 ~ file: Authentication.js:33 ~ authenticate ~ token:',
+    //   token
+    // );
     if (!decoded) return next(new AppError('Not Valied Token ..', 403));
   } catch (error) {
     return next(new AppError('Invalid Token!', 403));
