@@ -253,7 +253,7 @@ export const filterHandler = catchAsync(async (req, res, next) => {
     country.length == 0 &&
     gender.length == 0 &&
     !query &&
-    !isInstructor
+    isInstructor == ''
   )
     return Response(
       res,
@@ -305,27 +305,48 @@ export const filterHandler = catchAsync(async (req, res, next) => {
         filterResult.add(user.id);
       }
     }
+    console.log(
+      '🚀 ~ file: userController.js:306 ~ filterHandler ~ query:',
+      filterResult
+    );
   }
 
-  if (isInstructor) {
+  if (isInstructor == true) {
     let instructors = [];
 
-    if (userList.length > 0) {
+    if (filterResult.size > 0) {
       instructors = await prisma.user.findMany({
         where: {
           AND: [
-            { id: { in: userList } },
+            { id: { in: [...filterResult] } },
             { role: 'INSTRUCTOR' },
             { availability: true },
           ],
         },
       });
+      console.log(
+        '🚀 ~ file: userController.js:327 ~ filterHandler ~ instructors:',
+        instructors
+      );
+      filterResult.clear();
     } else {
-      instructors = await prisma.user.findMany({
-        where: {
-          AND: [{ role: 'INSTRUCTOR' }, { availability: true }],
-        },
-      });
+      if (userList.length > 0) {
+        instructors = await prisma.user.findMany({
+          where: {
+            AND: [
+              { id: { in: userList } },
+              { role: 'INSTRUCTOR' },
+              { availability: true },
+            ],
+          },
+        });
+      } else {
+        instructors = await prisma.user.findMany({
+          where: {
+            AND: [{ role: 'INSTRUCTOR' }, { availability: true }],
+          },
+        });
+      }
     }
 
     if (instructors.length > 0) {
@@ -333,6 +354,10 @@ export const filterHandler = catchAsync(async (req, res, next) => {
         filterResult.add(user.id);
       }
     }
+    console.log(
+      '🚀 ~ file: userController.js:347 ~ filterHandler ~ instructor:',
+      filterResult
+    );
   }
 
   if (topics.length > 0) {
@@ -350,6 +375,7 @@ export const filterHandler = catchAsync(async (req, res, next) => {
             },
             select: { userId: true },
           });
+          filterResult.clear();
         } else {
           if (userList.length > 0) {
             usersWithThisTopic = await prisma.userTopics.findMany({
@@ -373,11 +399,12 @@ export const filterHandler = catchAsync(async (req, res, next) => {
         }
       }
     }
+    console.log(
+      '🚀 ~ file: userController.js:277 ~ filterHandler ~ topics:',
+      filterResult
+    );
   }
-  console.log(
-    '🚀 ~ file: userController.js:277 ~ filterHandler ~ topics:',
-    filterResult
-  );
+
   if (country.length > 0) {
     let countryResult;
     if (filterResult.size > 0) {
@@ -409,11 +436,11 @@ export const filterHandler = catchAsync(async (req, res, next) => {
     for (const counResult of countryResult) {
       filterResult.add(counResult.id);
     }
+    console.log(
+      '🚀 ~ file: userController.js:316 ~ filterHandler ~ country:',
+      filterResult
+    );
   }
-  console.log(
-    '🚀 ~ file: userController.js:316 ~ filterHandler ~ country:',
-    filterResult
-  );
 
   if (gender.length > 0) {
     let genderResult;
@@ -446,12 +473,12 @@ export const filterHandler = catchAsync(async (req, res, next) => {
         filterResult.add(genResult.id);
       }
     }
+    console.log(
+      '🚀 ~ file: userController.js:348 ~ filterHandler ~ gender:',
+      filterResult
+    );
   }
 
-  console.log(
-    '🚀 ~ file: userController.js:348 ~ filterHandler ~ gender:',
-    filterResult
-  );
   if (sorting.length > 0) {
     if (
       filterResult.size == 0 &&
