@@ -233,7 +233,7 @@ export const searchUser = catchAsync(async (req, res, next) => {
   });
   Response(res, 'Search Result', 200, foundedUser);
 });
-export const filterHandler = async (req, res, next) => {
+export const filterHandler = catchAsync(async (req, res, next) => {
   let userList = [];
   let usersPool = [];
   const [{ sorting }, { topics }, { country }, { gender }] = req.body.filters;
@@ -279,12 +279,19 @@ export const filterHandler = async (req, res, next) => {
       }
     }
   }
+  console.log(
+    '🚀 ~ file: userController.js:277 ~ filterHandler ~ topics:',
+    filterResult
+  );
   if (country.length > 0) {
     let countryResult;
     if (filterResult.size > 0) {
       countryResult = await prisma.user.findMany({
         where: {
-          AND: [{ id: { in: filterResult } }, { country: { in: country } }],
+          AND: [
+            { id: { in: [...filterResult] } },
+            { country: { in: country } },
+          ],
         },
         select: { id: true },
       });
@@ -308,8 +315,14 @@ export const filterHandler = async (req, res, next) => {
       filterResult.add(counResult.id);
     }
   }
+  console.log(
+    '🚀 ~ file: userController.js:316 ~ filterHandler ~ country:',
+    filterResult
+  );
+
   if (gender.length > 0) {
     let genderResult;
+
     if (!gender.includes('')) {
       if (filterResult.size > 0) {
         genderResult = await prisma.user.findMany({
@@ -323,7 +336,7 @@ export const filterHandler = async (req, res, next) => {
         });
         filterResult.clear();
       } else {
-        if (userList.length > 0) {
+        if (userList.length > 0 && topics.length == 0 && country.length == 0) {
           genderResult = await prisma.user.findMany({
             where: {
               AND: [{ id: { in: userList } }, { gender: { in: gender } }],
@@ -331,10 +344,7 @@ export const filterHandler = async (req, res, next) => {
             select: { id: true },
           });
         } else {
-          genderResult = await prisma.user.findMany({
-            where: { gender: { in: gender } },
-            select: { id: true },
-          });
+          genderResult = [...filterResult];
         }
       }
       for (const genResult of genderResult) {
@@ -342,7 +352,18 @@ export const filterHandler = async (req, res, next) => {
       }
     }
   }
+
+  console.log(
+    '🚀 ~ file: userController.js:348 ~ filterHandler ~ gender:',
+    filterResult
+  );
   if (sorting.length > 0) {
+    if (
+      filterResult.size == 0 &&
+      (gender.length > 0 || country.length > 0 || topics.length > 0)
+    ) {
+      return Response(res, 'Filter Result', 200, [...filterResult]);
+    }
     for (const sortValue of sorting) {
       if (sortValue == 'lowest hourly rate') {
         const sortResult = await sortUsers(
@@ -385,19 +406,54 @@ export const filterHandler = async (req, res, next) => {
         }
       }
       if (sortValue == 'highest experience') {
-        const sortResult = sortUsers([...filterResult], 'experience', 'desc');
+        const sortResult = await sortUsers(
+          [...filterResult],
+          'experience',
+          'desc'
+        );
         filterResult.clear();
+        for (const sortRes of sortResult) {
+          filterResult.add(sortRes);
+        }
+      }
+      if (sortValue == 'name A-Z') {
+        const sortResult = await sortUsers(
+          [...filterResult],
+          'firstName',
+          'asc'
+        );
+        filterResult.clear();
+
+        for (const sortRes of sortResult) {
+          filterResult.add(sortRes);
+        }
+      }
+      if (sortValue == 'name Z-A') {
+        const sortResult = await sortUsers(
+          [...filterResult],
+          'firstName',
+          'desc'
+        );
+        filterResult.clear();
+
         for (const sortRes of sortResult) {
           filterResult.add(sortRes);
         }
       }
     }
   }
+
+  if (sorting.length > 0) {
+    return Response(res, 'Filter Result', 200, [...filterResult]);
+  }
+
   const usersFilterResult = await prisma.user.findMany({
     where: { id: { in: [...filterResult] } },
   });
+
   Response(res, 'Filter Result', 200, usersFilterResult);
-};
+});
+
 export const getUserById = catchAsync(async (req, res, next) => {
   const userId = req.params.uid;
   const foundedUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -412,12 +468,21 @@ export const deleteUser = catchAsync(async (req, res, next) => {
   return Response(res, 'User deleted successfully.', 200, user);
 });
 const sortUsers = async (userList, field, sortingType) => {
-  let users = await prisma.user.findMany({
-    where: {
-      id: { in: userList },
-    },
-    orderBy: { [field]: sortingType },
-  });
+  let users;
+  if (userList.length > 0) {
+    users = await prisma.user.findMany({
+      where: {
+        id: { in: userList },
+      },
+      orderBy: { [field]: sortingType },
+      // select: { id: true },
+    });
+  } else {
+    users = await prisma.user.findMany({
+      orderBy: { [field]: sortingType },
+      // select: { id: true },
+    });
+  }
 
   return users;
 };

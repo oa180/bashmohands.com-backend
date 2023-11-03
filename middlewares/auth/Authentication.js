@@ -38,6 +38,10 @@ export const authenticate = catchAsync(async (req, res, next) => {
   } catch (error) {
     return next(new AppError('Invalid Token!', 403));
   }
+  console.log(
+    '🚀 ~ file: Authentication.js:38 ~ authenticate ~ decoded:',
+    decoded
+  );
 
   //Step 3 ==> User of Token is exist or not ... Adding role
   let user = await prisma.user.findUnique({ where: { id: decoded.id } });

@@ -8,6 +8,7 @@ export const bookSession = catchAsync(async (req, res, next) => {
 
   if (!instructorHandler || !clientHandler)
     return next(new AppError('Instructor or client are messing', 400));
+  console.log(req.body);
 
   if (!topics) return next(new AppError('Topics are messing', 400));
   const clientAndInstructorFound = await prisma.user.findMany({
