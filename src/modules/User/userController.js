@@ -11,6 +11,7 @@ import { createToken } from '../../../middlewares/auth/Authentication.js';
 import { getTopicByName } from '../Topics/topicController.js';
 import { ApiFeatures } from '../../../middlewares/utils/api-featuresjs.js';
 import { emailSender } from '../../../middlewares/services/Email/mail.js';
+import { paginate } from '../../../middlewares/utils/paginateFilters.js';
 
 export const getAllUsers = catchAsync(async (req, res, next) => {
   const features = new ApiFeatures(
@@ -388,7 +389,7 @@ export const filterHandler = catchAsync(async (req, res, next) => {
         }
       }
       if (sortValue == 'highest review') {
-        const sortResult = await sortUsers([...filterResult], 'review', 'desc');
+        const sortResult = await sortUsers([...filterResult], 'rating', 'desc');
         filterResult.clear();
         for (const sortRes of sortResult) {
           filterResult.add(sortRes);
@@ -444,14 +445,19 @@ export const filterHandler = catchAsync(async (req, res, next) => {
   }
 
   if (sorting.length > 0) {
-    return Response(res, 'Filter Result', 200, [...filterResult]);
+    return Response(
+      res,
+      'Filter Result',
+      200,
+      paginate(req, [...filterResult])
+    );
   }
 
   const usersFilterResult = await prisma.user.findMany({
     where: { id: { in: [...filterResult] } },
   });
 
-  Response(res, 'Filter Result', 200, usersFilterResult);
+  Response(res, 'Filter Result', 200, paginate(req, usersFilterResult));
 });
 
 export const getUserById = catchAsync(async (req, res, next) => {
