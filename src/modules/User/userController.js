@@ -234,23 +234,107 @@ export const searchUser = catchAsync(async (req, res, next) => {
   });
   Response(res, 'Search Result', 200, foundedUser);
 });
+
 export const filterHandler = catchAsync(async (req, res, next) => {
   let userList = [];
   let usersPool = [];
-  const [{ sorting }, { topics }, { country }, { gender }] = req.body.filters;
+  const [
+    { sorting },
+    { topics },
+    { country },
+    { gender },
+    { query },
+    { isInstructor },
+  ] = req.body.filters;
+
   if (
     sorting.length == 0 &&
     topics.length == 0 &&
     country.length == 0 &&
-    gender.length == 0
+    gender.length == 0 &&
+    !query &&
+    !isInstructor
   )
-    return Response(res, 'Filter Result', 200, await prisma.user.findMany());
+    return Response(
+      res,
+      'Filter Result',
+      200,
+      paginate(req, await prisma.user.findMany())
+    );
   if (!req.body.users) usersPool = await prisma.user.findMany();
   else usersPool = req.body.users;
   for (const user of usersPool) {
     userList.push(user.id);
   }
   const filterResult = new Set();
+
+  if (query) {
+    let queryResult = [];
+
+    if (userList.length > 0) {
+      queryResult = await prisma.user.findMany({
+        where: {
+          AND: [
+            { id: { in: userList } },
+            {
+              OR: [
+                { firstName: { contains: query, mode: 'insensitive' } },
+                { lastName: { contains: query, mode: 'insensitive' } },
+                { handler: { contains: query, mode: 'insensitive' } },
+                { jobTitle: { contains: query, mode: 'insensitive' } },
+              ],
+            },
+          ],
+        },
+      });
+    } else {
+      queryResult = await prisma.user.findMany({
+        where: {
+          OR: [
+            { firstName: { contains: query, mode: 'insensitive' } },
+            { lastName: { contains: query, mode: 'insensitive' } },
+            { handler: { contains: query, mode: 'insensitive' } },
+            { jobTitle: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+      });
+    }
+
+    if (queryResult.length > 0) {
+      for (const user of queryResult) {
+        filterResult.add(user.id);
+      }
+    }
+  }
+
+  if (isInstructor) {
+    let instructors = [];
+
+    if (userList.length > 0) {
+      instructors = await prisma.user.findMany({
+        where: {
+          AND: [
+            { id: { in: userList } },
+            { role: 'INSTRUCTOR' },
+            { availability: true },
+          ],
+        },
+      });
+    } else {
+      instructors = await prisma.user.findMany({
+        where: {
+          AND: [{ role: 'INSTRUCTOR' }, { availability: true }],
+        },
+      });
+    }
+
+    if (instructors.length > 0) {
+      for (const user of instructors) {
+        filterResult.add(user.id);
+      }
+    }
+  }
+
   if (topics.length > 0) {
     for (const topic of topics) {
       const topicFounded = await prisma.topic.findFirst({
@@ -258,19 +342,29 @@ export const filterHandler = catchAsync(async (req, res, next) => {
       });
       if (topicFounded) {
         let usersWithThisTopic;
-        if (userList.length > 0) {
+        if (filterResult.size > 0) {
           usersWithThisTopic = await prisma.userTopics.findMany({
             where: {
               topicId: topicFounded.id,
-              userId: { in: userList },
+              userId: { in: [...filterResult] },
             },
             select: { userId: true },
           });
         } else {
-          usersWithThisTopic = await prisma.userTopics.findMany({
-            where: { topicId: topicFounded.id },
-            select: { userId: true },
-          });
+          if (userList.length > 0) {
+            usersWithThisTopic = await prisma.userTopics.findMany({
+              where: {
+                topicId: topicFounded.id,
+                userId: { in: userList },
+              },
+              select: { userId: true },
+            });
+          } else {
+            usersWithThisTopic = await prisma.userTopics.findMany({
+              where: { topicId: topicFounded.id },
+              select: { userId: true },
+            });
+          }
         }
         if (usersWithThisTopic.length > 0) {
           for (const user of usersWithThisTopic) {
