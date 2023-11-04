@@ -13,6 +13,7 @@ import userRouter from '../src/modules/User/userRouter.js';
 import authRouter from '../middlewares/auth/authRouter.js';
 import topicRouter from '../src/modules/Topics/topicsRouter.js';
 import sessionRouter from '../src/modules/Session/sessionRouter.js';
+import paymentRouter from '../src/modules/Payment/paymentRouter.js';
 
 // Controllers Imports
 import globalErrorHandler from '../middlewares/error/errorController.js';
@@ -55,12 +56,29 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Web hook
+app.post(
+  '/stripe-webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const event = req.body;
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      console.log('Payment successful:', session);
+    }
+
+    res.status(200).end();
+  }
+);
+
 // Routers
 app.use('/api/admin', adminRouter);
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/topic', topicRouter);
 app.use('/api/session', sessionRouter);
+app.use('/api/pay', paymentRouter);
 // Not Found Router
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));

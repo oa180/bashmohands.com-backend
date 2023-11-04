@@ -257,7 +257,7 @@ export const getAllCountries = catchAsync(async (req, res, next) => {
     { name: 'Zimbabwe', code: 'ZW' },
   ];
 
-  Response(res, 'All Topics', 200, allCountries);
+  Response(res, 'All Countries', 200, allCountries);
 });
 
 export const createNewTopic = catchAsync(async (req, res, next) => {
