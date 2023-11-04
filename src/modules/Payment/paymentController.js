@@ -44,6 +44,13 @@ export const sessionCheckout = catchAsync(async (req, res, next) => {
     cancel_url: 'https://www.yahoo.com/?guccounter=1',
     // customer_email: user.email,
     // client_reference_id: id,
+    client_reference_id: JSON.stringify({
+      instructorHandler,
+      clientHandler,
+      date,
+      notes,
+      token,
+    }),
   });
   // console.log(stripeSession.url);
 

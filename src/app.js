@@ -63,10 +63,17 @@ app.post('/stripe-webhook', async (req, res) => {
   // Handle the Stripe event, check if it's a successful payment, and take action as needed
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    console.log('🚀 ~ file: app.js:66 ~ app.post ~ event.data:', event.data);
-    // Handle the successful payment, e.g., update your database, send notifications, etc.
+    // Parse the 'client_reference_id' to get your data object
+    const { instructorHandler, clientHandler, date, notes } = JSON.parse(
+      session.client_reference_id
+    );
+
+    // Now you have access to your data
     console.log('Payment successful:', session);
-    console.log(req.body);
+    console.log('Instructor Handler:', instructorHandler);
+    console.log('Client Handler:', clientHandler);
+    console.log('Date:', date);
+    console.log('Notes:', notes);
   }
 
   res.status(200).end();
