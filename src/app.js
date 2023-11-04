@@ -57,20 +57,20 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Web hook
-app.post(
-  '/stripe-webhook',
-  express.raw({ type: 'application/json' }),
-  async (req, res) => {
-    const event = req.body;
+app.post('/stripe-webhook', async (req, res) => {
+  const event = req.body;
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      console.log('Payment successful:', session);
-    }
-
-    res.status(200).end();
+  // Handle the Stripe event, check if it's a successful payment, and take action as needed
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    console.log('🚀 ~ file: app.js:66 ~ app.post ~ event.data:', event.data);
+    // Handle the successful payment, e.g., update your database, send notifications, etc.
+    console.log('Payment successful:', session);
+    console.log(req.body);
   }
-);
+
+  res.status(200).end();
+});
 
 // Routers
 app.use('/api/admin', adminRouter);
