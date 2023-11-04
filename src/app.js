@@ -56,28 +56,47 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Web hook
-app.post('/stripe-webhook', async (req, res) => {
-  const event = req.body;
+app.get('/success', (req, res) => {
+  const sessionId = req.query.session_id;
 
-  // Handle the Stripe event, check if it's a successful payment, and take action as needed
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    // Parse the 'client_reference_id' to get your data object
-    const { instructorHandler, clientHandler, date, notes } = JSON.parse(
-      session.client_reference_id
-    );
+  // Retrieve the uniqueIdentifier from the Stripe session
+  const uniqueIdentifier = req.query.client_reference_id;
 
-    // Now you have access to your data
-    console.log('Payment successful:', session);
-    console.log('Instructor Handler:', instructorHandler);
-    console.log('Client Handler:', clientHandler);
-    console.log('Date:', date);
-    console.log('Notes:', notes);
-  }
+  // Retrieve your data using the uniqueIdentifier
+  const { instructorHandler, clientHandler, date, notes } =
+    dataStorage[uniqueIdentifier];
 
-  res.status(200).end();
+  res.json({
+    message: 'Payment successful',
+    instructorHandler,
+    clientHandler,
+    date,
+    notes,
+  });
 });
+
+// Web hook
+// app.post('/stripe-webhook', async (req, res) => {
+//   const event = req.body;
+
+//   // Handle the Stripe event, check if it's a successful payment, and take action as needed
+//   if (event.type === 'checkout.session.completed') {
+//     const session = event.data.object;
+//     // Parse the 'client_reference_id' to get your data object
+//     const { instructorHandler, clientHandler, date, notes } = JSON.parse(
+//       session.client_reference_id
+//     );
+
+//     // Now you have access to your data
+//     console.log('Payment successful:', session);
+//     console.log('Instructor Handler:', instructorHandler);
+//     console.log('Client Handler:', clientHandler);
+//     console.log('Date:', date);
+//     console.log('Notes:', notes);
+//   }
+
+//   res.status(200).end();
+// });
 
 // Routers
 app.use('/api/admin', adminRouter);

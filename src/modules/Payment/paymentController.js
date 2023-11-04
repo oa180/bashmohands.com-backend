@@ -6,7 +6,12 @@ import Response from '../../../middlewares/utils/response.js';
 import axios from 'axios';
 
 const stripeInstance = stripe(process.env.STRIPE_API_KEY);
+const dataStorage = {};
 
+// Generate a unique identifier function (a simple UUID generator)
+function generateUniqueIdentifier() {
+  return Math.random().toString(36).substr(2, 9);
+}
 export const sessionCheckout = catchAsync(async (req, res, next) => {
   let { instructorHandler, clientHandler, date, notes } = req.body;
   let token;
@@ -18,6 +23,14 @@ export const sessionCheckout = catchAsync(async (req, res, next) => {
   } else {
     throw new AppError('Token Is not found, please provide one!', 400);
   }
+
+  const uniqueIdentifier = generateUniqueIdentifier();
+  dataStorage[uniqueIdentifier] = {
+    instructorHandler,
+    clientHandler,
+    date,
+    notes,
+  };
 
   let price = await prisma.user.findUnique({
     where: { handler: instructorHandler },
@@ -40,17 +53,11 @@ export const sessionCheckout = catchAsync(async (req, res, next) => {
       },
     ],
     mode: 'payment',
-    success_url: 'http://localhost:3000/about',
+    success_url: `http://localhost:5000/success?session_id=${stripeSession.id}`,
     cancel_url: 'https://www.yahoo.com/?guccounter=1',
     // customer_email: user.email,
     // client_reference_id: id,
-    client_reference_id: JSON.stringify({
-      instructorHandler,
-      clientHandler,
-      date,
-      notes,
-      token,
-    }),
+    client_reference_id: uniqueIdentifier,
   });
   // console.log(stripeSession.url);
 
