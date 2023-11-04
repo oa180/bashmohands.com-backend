@@ -28,4 +28,5 @@ router.post('/book', authenticate, bookSession);
 router.get('/success', handleSuccessPayment);
 router.get('/', getAllSessions);
 router.get('/:userName/pendding', authenticate, isAuthorized, penddingSessions);
+
 export default router;

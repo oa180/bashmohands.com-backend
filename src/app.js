@@ -56,25 +56,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-app.get('/success', (req, res) => {
-  const sessionId = req.query.session_id;
-
-  // Retrieve the uniqueIdentifier from the Stripe session
-  const uniqueIdentifier = req.query.client_reference_id;
-
-  // Retrieve your data using the uniqueIdentifier
-  const { instructorHandler, clientHandler, date, notes } =
-    dataStorage[uniqueIdentifier];
-
-  res.json({
-    message: 'Payment successful',
-    instructorHandler,
-    clientHandler,
-    date,
-    notes,
-  });
-});
-
 // Web hook
 // app.post('/stripe-webhook', async (req, res) => {
 //   const event = req.body;

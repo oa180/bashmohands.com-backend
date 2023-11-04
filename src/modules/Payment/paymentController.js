@@ -6,14 +6,19 @@ import Response from '../../../middlewares/utils/response.js';
 import axios from 'axios';
 
 const stripeInstance = stripe(process.env.STRIPE_API_KEY);
-const dataStorage = {};
 
-// Generate a unique identifier function (a simple UUID generator)
+export const dataStorage = {};
+
 function generateUniqueIdentifier() {
   return Math.random().toString(36).substr(2, 9);
 }
+
 export const sessionCheckout = catchAsync(async (req, res, next) => {
   let { instructorHandler, clientHandler, date, notes } = req.body;
+  console.log(
+    '🚀 ~ file: paymentController.js:18 ~ sessionCheckout ~  { instructorHandler, clientHandler, date, notes }:',
+    { instructorHandler, clientHandler, date, notes }
+  );
   let token;
   if (
     req.headers.authorization &&
@@ -30,6 +35,7 @@ export const sessionCheckout = catchAsync(async (req, res, next) => {
     clientHandler,
     date,
     notes,
+    token,
   };
 
   let price = await prisma.user.findUnique({
@@ -53,11 +59,11 @@ export const sessionCheckout = catchAsync(async (req, res, next) => {
       },
     ],
     mode: 'payment',
-    success_url: `http://localhost:5000/success?session_id=${stripeSession.id}`,
+    // success_url: `bashmohands.onrender.com/api/pay/success?uniqueIdentifier=${uniqueIdentifier}`,
+    success_url: `http://localhost:5000/api/pay/success?uniqueIdentifier=${uniqueIdentifier}`,
     cancel_url: 'https://www.yahoo.com/?guccounter=1',
     // customer_email: user.email,
     // client_reference_id: id,
-    client_reference_id: uniqueIdentifier,
   });
   // console.log(stripeSession.url);
 
@@ -65,4 +71,50 @@ export const sessionCheckout = catchAsync(async (req, res, next) => {
     return next(new AppError('Payment Failed, please try again!', 500));
 
   res.json({ redirectTo: stripeSession.url });
+});
+
+export const handleSuccessPayment = catchAsync(async (req, res, next) => {
+  try {
+    // const sessionId = req.query.session_id;
+    const uniqueIdentifier = req.query.uniqueIdentifier;
+
+    const { instructorHandler, clientHandler, date, notes, token } =
+      dataStorage[uniqueIdentifier];
+
+    // res.json({
+    //   message: 'Payment successful',
+    //   instructorHandler,
+    //   clientHandler,
+    //   date,
+    //   notes,
+    //   token,
+    // });
+
+    const bookSessionUrl = 'http://localhost:5000/api/session/book';
+    // const bookSessionUrl = 'bashmohands.onrender.com/api/session/book';
+
+    const response = axios.post(
+      bookSessionUrl,
+      {
+        instructorHandler,
+        clientHandler,
+        date,
+        topics: ['Js'],
+        notes,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log(response.data);
+
+    Response(res, 'Session Booked Successfuuly.', 200);
+  } catch (error) {
+    console.log('Error in /success route:', error);
+    res.status(500).json({ error });
+  }
 });
