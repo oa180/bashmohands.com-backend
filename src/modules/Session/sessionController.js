@@ -5,6 +5,10 @@ import Response from '../../../middlewares/utils/response.js';
 
 export const bookSession = catchAsync(async (req, res, next) => {
   const { instructorHandler, clientHandler, notes, date, topics } = req.body;
+  console.log(
+    '🚀 ~ file: sessionController.js:8 ~ bookSession ~ req.body:',
+    req.body
+  );
 
   if (!instructorHandler || !clientHandler)
     return next(new AppError('Instructor or client are messing', 400));
@@ -72,6 +76,11 @@ export const bookSession = catchAsync(async (req, res, next) => {
   }
 
   Response(res, 'Session Booked', 200, session);
+});
+
+export const handleSuccessPayment = catchAsync(async (req, res, next) => {
+  console.log(req.body);
+  console.log(req.headers);
 });
 
 export const getUserSessions = catchAsync(async (req, res, next) => {
@@ -210,7 +219,7 @@ export const penddingSessions = catchAsync(async (req, res, next) => {
       instructorHandler: true,
       notes: true,
       status: true,
-      topics: true,
+      // topics: true,
     },
   });
 

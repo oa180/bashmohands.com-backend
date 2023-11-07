@@ -16,10 +16,6 @@ export const createToken = user => {
 };
 
 export const authenticate = catchAsync(async (req, res, next) => {
-  /**
-   * Desc Get token from cookie if production
-   *      Get token from header if development
-   */
   let token;
   if (
     req.headers.authorization &&
@@ -34,16 +30,21 @@ export const authenticate = catchAsync(async (req, res, next) => {
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    // console.log(
+    //   '🚀 ~ file: Authentication.js:33 ~ authenticate ~ token:',
+    //   token
+    // );
     if (!decoded) return next(new AppError('Not Valied Token ..', 403));
   } catch (error) {
     return next(new AppError('Invalid Token!', 403));
   }
+  console.log(
+    '🚀 ~ file: Authentication.js:38 ~ authenticate ~ decoded:',
+    decoded
+  );
 
   //Step 3 ==> User of Token is exist or not ... Adding role
-  console.log(decoded);
-
   let user = await prisma.user.findUnique({ where: { id: decoded.id } });
-
   if (!user) return next(new AppError('Not-Exist User Of This Token..', 404));
   //console.log(user);
 
@@ -64,14 +65,4 @@ export const authenticate = catchAsync(async (req, res, next) => {
   }
   req.user = user;
   next();
-});
-
-export const isMine = catchAsync(async (req, res, next) => {
-  if (req.user.role === 'ADMIN') return next();
-  else if (req.params.userName == req.user.handler) {
-    return next();
-  } else
-    return next(
-      new AppError('You donot have access to perform this action', 403)
-    );
 });

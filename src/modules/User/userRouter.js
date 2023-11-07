@@ -1,7 +1,4 @@
-// Third Parties Imports
 import express from 'express';
-
-// Local Imports
 import {
   registerNewUser,
   uploadUserPhotos,
@@ -9,77 +6,56 @@ import {
   uploadToCloud,
   getUser,
   viewProfile,
-  getUserAvailability,
   setUserAvailability,
   updateUser,
   searchUser,
   getAllUsers,
+  getAllInstructors,
+  getAllClients,
   getUserById,
   filterHandler,
   updataUserImages,
-  getAvaialableInstructors,
+  getAvailableInstructors,
+  deleteUser,
 } from '../User/userController.js';
-import {
-  isMine,
-  authenticate,
-} from '../../../middlewares/auth/Authentication.js';
-const router = express.Router();
+import { authenticate } from '../../../middlewares/auth/Authentication.js';
+import { isAuthorized } from '../../../middlewares/auth/Authorization.js';
 
-/**
- * @desc    Create new User route
- * @route   POST /api/user
- * @access  Public
- */
-router.post('/', registerNewUser).get('/', getAllUsers);
-/**
- * @desc    Updatr User route
- * @route   PATCH POST /api/user/:userName/update
- * @access  User itself
- */
+const router = express.Router();
+//Testing
+router.get('/', getAllUsers);
+router.get('/instractors', getAllInstructors); //get all instractors
+router.get('/clients', getAllClients); //get all clients
+
+router.post('/', registerNewUser);
+router.get('/myProfile', authenticate, getUser);
+router.get('/public/:userName', viewProfile);
+router.get('/instructors', authenticate, getAvailableInstructors);
+router.get(
+  '/:userName/setAvailability',
+  authenticate,
+  isAuthorized,
+  setUserAvailability
+);
 router.patch(
   '/:userName/update-info',
   authenticate,
-  isMine,
+  isAuthorized,
   uploadUserPhotos,
   updateUser
 );
-/**
- * @desc    Get User Profile route
- * @route   POST /api/user/:userName
- * @access  Public
- */
-router.get('/myProfile', authenticate, getUser);
-
-router.get('/public/:userName', viewProfile);
-/**
- * @desc    Set User Availability
- * @route   GET /api/user/:userName/set-availabilty
- * @access   Public
- */
-router.get('/:userName/set-availability', setUserAvailability);
-/**
- * @desc    Get User Availability
- * @route   GET /api/user/:userName/availabilty
- * @access   Public
- */
-router.get('/:userName/availability', getUserAvailability);
-router.get('/instructors', getAvaialableInstructors);
-/**
- * @desc    Get User Availability
- * @route   GET /api/user/:userName/availabilty
- * @access   Public
- */
-router.get('/search', searchUser);
-router.post('/filter', filterHandler);
-router.get('/:uid', getUserById);
 router.patch(
   '/:userName/update-img',
   authenticate,
-  isMine,
+  isAuthorized,
   uploadUserPhotos,
   resizeUserPhoto,
   uploadToCloud,
   updataUserImages
 );
 
+router.get('/search', searchUser);
+router.post('/filter', filterHandler);
+router.get('/:uid', getUserById);
+router.get('/:userName/delete', authenticate, isAuthorized, deleteUser);
 export default router;
