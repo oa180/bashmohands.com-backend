@@ -43,6 +43,8 @@ model User {
   bookedSlots        BookedSlot[]
   instructorSessions Session[]    @relation("Instructor")
   clientSession      Session[]    @relation("Client")
+  clientPayments     Payment[]    @relation("ClientPayement")
+  instructorPayments Payment[]    @relation("InstructorPayment")
 }
 
 model Topic {
@@ -72,6 +74,7 @@ model Session {
   Client            User?             @relation("Client", fields: [clientHandler], references: [handler])
   clientHandler     String?
   topics            SessionTopics[]
+  Payment           Payment[]
 }
 
 model SessionTopics {
@@ -91,6 +94,20 @@ model BookedSlot {
   order        Int
   instructor   User     @relation(fields: [instructorId], references: [id])
   instructorId String
+  session      Session  @relation(fields: [sessionId], references: [id])
+  sessionId    String
+}
+
+model Payment {
+  id           String   @id @default(uuid())
+  price        Float
+  isPaid       Boolean  @default(false)
+  isPaidAt     DateTime @default(now())
+  isDeliverd   Boolean  @default(false)
+  instructor   User     @relation("InstructorPayment", fields: [instructorId], references: [id])
+  instructorId String
+  client       User     @relation("ClientPayement", fields: [clientId], references: [id])
+  clientId     String
   session      Session  @relation(fields: [sessionId], references: [id])
   sessionId    String
 }

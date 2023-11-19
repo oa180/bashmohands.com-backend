@@ -243,17 +243,18 @@ export const filterHandler = catchAsync(async (req, res, next) => {
     { topics },
     { country },
     { gender },
-    { query },
-    { isInstructor },
+    // { query },
+    // { isInstructor },
   ] = req.body.filters;
 
   if (
     sorting.length == 0 &&
     topics.length == 0 &&
     country.length == 0 &&
-    gender.length == 0 &&
-    !query &&
-    isInstructor == ''
+    gender.length == 0
+    //  &&
+    // !query &&
+    // isInstructor == ''
   )
     return Response(
       res,
@@ -268,97 +269,97 @@ export const filterHandler = catchAsync(async (req, res, next) => {
   }
   const filterResult = new Set();
 
-  if (query) {
-    let queryResult = [];
+  // if (query) {
+  //   let queryResult = [];
 
-    if (userList.length > 0) {
-      queryResult = await prisma.user.findMany({
-        where: {
-          AND: [
-            { id: { in: userList } },
-            {
-              OR: [
-                { firstName: { contains: query, mode: 'insensitive' } },
-                { lastName: { contains: query, mode: 'insensitive' } },
-                { handler: { contains: query, mode: 'insensitive' } },
-                { jobTitle: { contains: query, mode: 'insensitive' } },
-              ],
-            },
-          ],
-        },
-      });
-    } else {
-      queryResult = await prisma.user.findMany({
-        where: {
-          OR: [
-            { firstName: { contains: query, mode: 'insensitive' } },
-            { lastName: { contains: query, mode: 'insensitive' } },
-            { handler: { contains: query, mode: 'insensitive' } },
-            { jobTitle: { contains: query, mode: 'insensitive' } },
-          ],
-        },
-      });
-    }
+  //   if (userList.length > 0) {
+  //     queryResult = await prisma.user.findMany({
+  //       where: {
+  //         AND: [
+  //           { id: { in: userList } },
+  //           {
+  //             OR: [
+  //               { firstName: { contains: query, mode: 'insensitive' } },
+  //               { lastName: { contains: query, mode: 'insensitive' } },
+  //               { handler: { contains: query, mode: 'insensitive' } },
+  //               { jobTitle: { contains: query, mode: 'insensitive' } },
+  //             ],
+  //           },
+  //         ],
+  //       },
+  //     });
+  //   } else {
+  //     queryResult = await prisma.user.findMany({
+  //       where: {
+  //         OR: [
+  //           { firstName: { contains: query, mode: 'insensitive' } },
+  //           { lastName: { contains: query, mode: 'insensitive' } },
+  //           { handler: { contains: query, mode: 'insensitive' } },
+  //           { jobTitle: { contains: query, mode: 'insensitive' } },
+  //         ],
+  //       },
+  //     });
+  //   }
 
-    if (queryResult.length > 0) {
-      for (const user of queryResult) {
-        filterResult.add(user.id);
-      }
-    }
-    console.log(
-      '🚀 ~ file: userController.js:306 ~ filterHandler ~ query:',
-      filterResult
-    );
-  }
+  //   if (queryResult.length > 0) {
+  //     for (const user of queryResult) {
+  //       filterResult.add(user.id);
+  //     }
+  //   }
+  //   console.log(
+  //     '🚀 ~ file: userController.js:306 ~ filterHandler ~ query:',
+  //     filterResult
+  //   );
+  // }
 
-  if (isInstructor == true) {
-    let instructors = [];
+  // if (isInstructor == true) {
+  //   let instructors = [];
 
-    if (filterResult.size > 0) {
-      instructors = await prisma.user.findMany({
-        where: {
-          AND: [
-            { id: { in: [...filterResult] } },
-            { role: 'INSTRUCTOR' },
-            { availability: true },
-          ],
-        },
-      });
-      console.log(
-        '🚀 ~ file: userController.js:327 ~ filterHandler ~ instructors:',
-        instructors
-      );
-      filterResult.clear();
-    } else {
-      if (userList.length > 0) {
-        instructors = await prisma.user.findMany({
-          where: {
-            AND: [
-              { id: { in: userList } },
-              { role: 'INSTRUCTOR' },
-              { availability: true },
-            ],
-          },
-        });
-      } else {
-        instructors = await prisma.user.findMany({
-          where: {
-            AND: [{ role: 'INSTRUCTOR' }, { availability: true }],
-          },
-        });
-      }
-    }
+  //   if (filterResult.size > 0) {
+  //     instructors = await prisma.user.findMany({
+  //       where: {
+  //         AND: [
+  //           { id: { in: [...filterResult] } },
+  //           { role: 'INSTRUCTOR' },
+  //           { availability: true },
+  //         ],
+  //       },
+  //     });
+  //     console.log(
+  //       '🚀 ~ file: userController.js:327 ~ filterHandler ~ instructors:',
+  //       instructors
+  //     );
+  //     filterResult.clear();
+  //   } else {
+  //     if (userList.length > 0) {
+  //       instructors = await prisma.user.findMany({
+  //         where: {
+  //           AND: [
+  //             { id: { in: userList } },
+  //             { role: 'INSTRUCTOR' },
+  //             { availability: true },
+  //           ],
+  //         },
+  //       });
+  //     } else {
+  //       instructors = await prisma.user.findMany({
+  //         where: {
+  //           AND: [{ role: 'INSTRUCTOR' }, { availability: true }],
+  //         },
+  //       });
+  //     }
+  //   }
 
-    if (instructors.length > 0) {
-      for (const user of instructors) {
-        filterResult.add(user.id);
-      }
-    }
-    console.log(
-      '🚀 ~ file: userController.js:347 ~ filterHandler ~ instructor:',
-      filterResult
-    );
-  }
+  //   if (instructors.length > 0) {
+  //     for (const user of instructors) {
+  //       filterResult.add(user.id);
+  //     }
+  //   }
+  //   console.log(
+  //     '🚀 ~ file: userController.js:347 ~ filterHandler ~ instructor:',
+  //     filterResult
+  //   );
+  // }
 
   if (topics.length > 0) {
     for (const topic of topics) {

@@ -5,45 +5,8 @@ import Response from '../../../middlewares/utils/response.js';
 
 export const bookSession = catchAsync(async (req, res, next) => {
   const { instructorHandler, clientHandler, notes, date, topics } = req.body;
-  console.log(
-    '🚀 ~ file: sessionController.js:8 ~ bookSession ~ req.body:',
-    req.body
-  );
-
-  if (!instructorHandler || !clientHandler)
-    return next(new AppError('Instructor or client are messing', 400));
 
   if (!topics) return next(new AppError('Topics are messing', 400));
-  const clientAndInstructorFound = await prisma.user.findMany({
-    where: {
-      OR: [
-        {
-          handler: instructorHandler,
-        },
-        {
-          handler: clientHandler,
-        },
-      ],
-    },
-  });
-
-  if (clientAndInstructorFound.length !== 2)
-    return next(new AppError('Wrong instructor or client handler!', 404));
-
-  const runningSessionAvailable = await prisma.session.findFirst({
-    where: {
-      clientHandler,
-      instructorHandler,
-      status: { not: 'deliverd' },
-    },
-  });
-  if (runningSessionAvailable)
-    return next(
-      new AppError(
-        'Cannot book another session with this instrctor, already running session!',
-        400
-      )
-    );
 
   let foundedTopics = await prisma.topic.findMany({
     where: { name: { in: topics } },
@@ -54,8 +17,6 @@ export const bookSession = catchAsync(async (req, res, next) => {
     return next(new AppError('Wrong topic name!', 404));
 
   const topicIds = foundedTopics.map(topic => topic.id);
-
-  console.log(topicIds);
 
   const session = await prisma.session.create({
     data: {
@@ -75,6 +36,7 @@ export const bookSession = catchAsync(async (req, res, next) => {
     });
   }
 
+  // return session;
   Response(res, 'Session Booked', 200, session);
 });
 

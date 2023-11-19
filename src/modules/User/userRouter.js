@@ -30,7 +30,7 @@ router.get('/clients', getAllClients); //get all clients
 router.post('/', registerNewUser);
 router.get('/myProfile', authenticate, getUser);
 router.get('/public/:userName', viewProfile);
-router.get('/instructors', authenticate, getAvailableInstructors);
+router.get('/instructors', getAvailableInstructors);
 router.get(
   '/:userName/setAvailability',
   authenticate,
